@@ -1,13 +1,13 @@
 ﻿using Common.Logging;
 using Quartz;
 using Quartz.Impl;
+using ScrapeRateService.Interface;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.ServiceProcess;
 using System.Text;
 using System.Threading;
-using System.Threading.Tasks;
 
 namespace ScrapeRateService
 {
@@ -37,7 +37,14 @@ namespace ScrapeRateService
             IScheduler _scheduler = new StdSchedulerFactory().GetScheduler();
             _scheduler.Start();
 
+#if DEBUG
+            var scrapeWork = Strategy.StrategyFactory.GetStrategy(Model.ScrapeTypeConstant.CTCB);
+            var result = scrapeWork.Execute();
+            _log.Info(result);
 
+
+
+#endif
             shutdownEvent = new ManualResetEvent(false);
 
             //用於多個service

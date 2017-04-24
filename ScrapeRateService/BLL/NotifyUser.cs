@@ -5,21 +5,21 @@ using System.Net;
 using System.Configuration;
 using System.Text;
 
-namespace ScrapeRateService
+namespace ScrapeRateService.BLL
 {
-    public class Notify
+    public class NotifyUser
     {
-        private static readonly ILog log = LogManager.GetLogger(typeof(Notify));
+        private static readonly ILog log = LogManager.GetLogger(typeof(NotifyUser));
 
-        private static readonly Lazy<Notify> LazyInstance = new Lazy<Notify>(() => new Notify());
+        private static readonly Lazy<NotifyUser> LazyInstance = new Lazy<NotifyUser>(() => new NotifyUser());
 
         private static string token = ConfigurationManager.AppSettings["LineToken"];
 
         private static string lineServiceUri = ConfigurationManager.AppSettings["LineServiceUri"];
 
-        private Notify() { }
+        private NotifyUser() { }
 
-        public static Notify Instance { get { return LazyInstance.Value; } }
+        public static NotifyUser Instance { get { return LazyInstance.Value; } }
 
         public void PostMessage(string message)
         {

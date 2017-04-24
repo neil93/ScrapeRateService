@@ -1,22 +1,13 @@
-﻿using Common.Logging;
-using HtmlAgilityPack;
+﻿using HtmlAgilityPack;
 using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace ScrapeRateService
+namespace ScrapeRateService.Strategy
 {
-    public class ScrapeWork
+    internal class StrategyScrapeTaiwanBank : ScrapeStrategy
     {
-        private static readonly ILog log = LogManager.GetLogger(typeof(ScrapeWork));
-
-        private static readonly Lazy<ScrapeWork> LazyInstance = new Lazy<ScrapeWork>(() => new ScrapeWork());
-
-        private ScrapeWork() { }
-
-        public static ScrapeWork Instance { get { return LazyInstance.Value; } }
-
-        public string Execute()
+        internal override string Execute()
         {
             try
             {
@@ -34,29 +25,23 @@ namespace ScrapeRateService
                 list.Add("人民幣", new int[] { 19, 3 });
                 list.Add("澳幣", new int[] { 4, 3 });
                 list.Add("加拿大幣", new int[] { 5, 3 });
+                list.Add("紐元", new int[] { 11, 3 });
 
                 sb.AppendLine("");
                 sb.AppendLine($"台灣銀行現金匯率：{DateTime.Now.ToString("yyyy-MM-dd HH:mm")}");
-                log.Info($"台灣銀行現金匯率：{DateTime.Now.ToString("yyyy-MM-dd HH:mm")}");
                 foreach (var key in list)
                 {
                     var cashSalePrice = hdc.DocumentNode.SelectSingleNode($"/tbody/tr[{key.Value[0]}]/td[{key.Value[1]}]").InnerText;
                     sb.AppendLine($"{key.Key}:{cashSalePrice}");
-                    log.Info($"{key.Key}:{cashSalePrice}");
                 }
 
-                string desc = "其它匯率請參考：http://rate.bot.com.tw/xrt?Lang=zh-TW";
-                string desc1 = "通報時間=>週一~週五(AM:09:00~PM:19:00)";
-
-                sb.AppendLine(desc);
-                sb.AppendLine(desc1);
-                log.Info(desc + desc1);
+                sb.AppendLine($"其它匯率請參考：{url}\r\n通報時間=>週一~週五(AM:09:00~PM:19:00)");
                 doc = null;
                 return sb.ToString();
             }
             catch (Exception ex)
             {
-                log.Error(ex);
+                base._log.Error(ex);
             }
             return string.Empty;
         }
