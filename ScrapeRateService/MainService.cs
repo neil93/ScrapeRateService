@@ -38,7 +38,7 @@ namespace ScrapeRateService
             _scheduler.Start();
 
 #if DEBUG
-            var scrapeWork = Strategy.StrategyFactory.GetStrategy(Model.ScrapeTypeConstant.CTCB);
+            var scrapeWork = Strategy.StrategyFactory.GetStrategy(Model.ScrapeTypeConstant.TaiwanBank);
             var result = scrapeWork.Execute();
             _log.Info(result);
 

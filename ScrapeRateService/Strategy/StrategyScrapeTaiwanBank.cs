@@ -1,7 +1,9 @@
 ﻿using HtmlAgilityPack;
 using System;
 using System.Collections.Generic;
+using System.Net;
 using System.Text;
+using ScrapeRateService.BLL;
 
 namespace ScrapeRateService.Strategy
 {
@@ -12,9 +14,16 @@ namespace ScrapeRateService.Strategy
             try
             {
                 StringBuilder sb = new StringBuilder();
-                string url = "http://rate.bot.com.tw/xrt?Lang=zh-TW";
+                string url = "https://rate.bot.com.tw/xrt?Lang=zh-TW";
+
+                ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls11;
+
                 var htmlWeb = new HtmlWeb();
                 var doc = htmlWeb.Load(url);
+
+                var time = doc.DocumentNode.SelectSingleNode("/html[1]/body[1]/div[1]/main/div[4]/p[2]/span[2]").InnerHtml;
+
+
                 var nodes = doc.DocumentNode.SelectSingleNode("/html[1]/body[1]/div[1]/main/div[4]/table").InnerHtml;
                 HtmlDocument hdc = new HtmlDocument();
                 hdc.LoadHtml(nodes);
@@ -26,9 +35,11 @@ namespace ScrapeRateService.Strategy
                 list.Add("澳幣", new int[] { 4, 3 });
                 list.Add("加拿大幣", new int[] { 5, 3 });
                 list.Add("紐元", new int[] { 11, 3 });
-
+                list.Add("歐元", new int[] { 15, 3 });
+                list.Add("英鎊", new int[] { 3, 3 });
+              
                 sb.AppendLine("");
-                sb.AppendLine($"台灣銀行現金匯率：{DateTime.Now.ToString("yyyy-MM-dd HH:mm")}");
+                sb.AppendLine($"台灣銀行掛牌時間：{time}");
                 foreach (var key in list)
                 {
                     var cashSalePrice = hdc.DocumentNode.SelectSingleNode($"/tbody/tr[{key.Value[0]}]/td[{key.Value[1]}]").InnerText;
