@@ -16,15 +16,15 @@ namespace ScrapeRateService.Strategy
                 StringBuilder sb = new StringBuilder();
                 string url = "https://rate.bot.com.tw/xrt?Lang=zh-TW";
 
-                ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls11;
+                ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12;
 
                 var htmlWeb = new HtmlWeb();
                 var doc = htmlWeb.Load(url);
 
-                var time = doc.DocumentNode.SelectSingleNode("/html[1]/body[1]/div[1]/main/div[4]/p[2]/span[2]").InnerHtml;
+                var time = doc.DocumentNode.SelectSingleNode("/html[1]/body[1]/div[1]/main/div[3]/p[2]/span[2]").InnerHtml;
 
 
-                var nodes = doc.DocumentNode.SelectSingleNode("/html[1]/body[1]/div[1]/main/div[4]/table").InnerHtml;
+                var nodes = doc.DocumentNode.SelectSingleNode("/html[1]/body[1]/div[1]/main/div[3]/table").InnerHtml;
                 HtmlDocument hdc = new HtmlDocument();
                 hdc.LoadHtml(nodes);
 
