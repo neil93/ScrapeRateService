@@ -9,14 +9,13 @@ using System.ServiceProcess;
 using System.Text;
 using System.Threading;
 using System.Collections.Specialized;
+using ScrapeRateService.BLL;
 
 namespace ScrapeRateService
 {
 
     partial class MainService :ServiceBase
     {
-        private IScheduler _schedular = null; // Quartz排程器
-
         private ManualResetEvent shutdownEvent;
         private readonly IList<IService> _services = new List<IService>();
         private readonly ILog _log = LogManager.GetLogger(typeof(MainService));
@@ -36,39 +35,33 @@ namespace ScrapeRateService
             _log.Info("Service turned on.");
 
             //啟動quartz 排程
-
-           // IScheduler _scheduler = new StdSchedulerFactory().GetScheduler();
-
-            ISchedulerFactory sf = new Quartz.Impl.StdSchedulerFactory();
-            _schedular = sf.GetScheduler();
-
-            //_schedular.Start(); // 啟動Quartz排程器
-
-
-
+            ISchedulerFactory sf = new StdSchedulerFactory();
+            IScheduler _schedular = sf.GetScheduler();
             _schedular.Start();
 
-
-
             //# 建立固定排程工作１,原則上一個Job呼應一個Trigger。
-            IJobDetail job1 = JobBuilder.Create<ScrapeRateService.Job.ScheduleJob>()
-                                 .WithIdentity("job1")
+            IJobDetail job = JobBuilder.Create<Job.ScheduleJob>()
+                                 .WithIdentity("job1", "group1")
                                  .Build();
 
-            ITrigger trigger1 = TriggerBuilder.Create()
-                                 .WithIdentity("trigger1")
-                                 .WithCronSchedule("0 0 9-19 ? * MON-FRI") // 每5秒觸發一次。
+            ITrigger trigger = TriggerBuilder.Create()
+                                  .WithIdentity("trigger1", "group1")
+                                  .WithCronSchedule("0 0 9-19 ? * MON-FRI") 
+                                  //.WithSimpleSchedule(x => x.WithIntervalInSeconds(5).RepeatForever())// 測試用每5秒觸發一次。
                                  .Build();
 
-            _schedular.ScheduleJob(job1, trigger1);
+            _schedular.ScheduleJob(job, trigger);
+
 
 #if DEBUG
             var scrapeWork = Strategy.StrategyFactory.GetStrategy(Model.ScrapeTypeConstant.TaiwanBank);
             var result = scrapeWork.Execute();
-            _log.Info(result);
 
-
-
+            if (!string.IsNullOrEmpty(result))
+            {
+                NotifyUser.Instance.PostMessage(result);
+                _log.Info(result);
+            }
 #endif
             shutdownEvent = new ManualResetEvent(false);
 
@@ -80,33 +73,7 @@ namespace ScrapeRateService
             base.OnStart(args);
         }
 
-
-        protected static  NameValueCollection QuartzConfig()
-        {
-            NameValueCollection quartzProps = new NameValueCollection();
-
-            quartzProps.Add("quartz.scheduler.instanceName", "MyScheduler");
-            quartzProps.Add("quartz.scheduler.instanceId", "AUTO");
-            quartzProps.Add("quartz.threadPool.type", "Quartz.Simpl.SimpleThreadPool, Quartz");
-            quartzProps.Add("quartz.threadPool.threadCount", "10");
-            quartzProps.Add("quartz.threadPool.threadPriority", "Normal");
-
-            quartzProps.Add("quartz.scheduler.idleWaitTime", "5000");
-
-            quartzProps.Add("quartz.jobStore.misfireThreshold", "60000");
-            quartzProps.Add("quartz.jobStore.type", "Quartz.Impl.AdoJobStore.JobStoreTX, Quartz");
-            quartzProps.Add("quartz.jobStore.tablePrefix", "QRTZ_");
-            quartzProps.Add("quartz.jobStore.clustered", "false");
-            quartzProps.Add("quartz.jobStore.driverDelegateType", "Quartz.Impl.AdoJobStore.SqlServerDelegate, Quartz");
-            quartzProps.Add("quartz.jobStore.lockHandler.type", "Quartz.Impl.AdoJobStore.UpdateLockRowSemaphore, Quartz");
-            quartzProps.Add("quartz.jobStore.useProperties", "true");
-
-            //quartzProps.Add("quartz.jobStore.dataSource", "default");
-            //quartzProps.Add("quartz.dataSource.default.connectionString", @"Data Source=YourPC\sqlexpress;Initial Catalog=Quartz;Integrated Security=True");
-            //quartzProps.Add("quartz.dataSource.default.provider", "SqlServer-20");
-
-            return quartzProps;
-        }
+       
         private void serviceStart()
         {
             foreach (var scrapingService in _services)
